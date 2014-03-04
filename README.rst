@@ -28,7 +28,7 @@ License
 =======
 *BSD 2-Clause License*
 
-Copyright (c) 2012-2013, Alexander Else
+Copyright (c) 2012-2014, Alexander Else
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without 
@@ -66,3 +66,4 @@ to the end of this list and include the change in your pull request.
 * Dan Hansen (@dansomething)
 * Terin Stock (@terinjokes)
 * Sorin Sbarnea (@ssbarnea)
+* Christian Schläppi (@nevious)

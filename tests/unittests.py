@@ -196,6 +196,53 @@ class testCrowdAuth(unittest.TestCase):
         result = self.crowd.user_exists(USER)
         self.assertTrue(result)
 
+    def testUserAttributesExist(self):
+        result = self.crowd.get_user(USER)
+        self.assertIsNotNone(result)
+        self.assertTrue('attributes' in result)
+
+    def testUserAttributesReturned(self):
+        crowdserverstub.add_user('attruser', 'mypass', {'something': True})
+        result = self.crowd.get_user('attruser')
+        self.assertIsNotNone(result)
+        self.assertTrue('attributes' in result)
+        self.assertTrue('something' in result['attributes'])
+
+    def testUserCreationSuccess(self):
+        result = self.crowd.add_user('newuser',
+                                     email='me@test.example',
+                                     password='hello')
+        self.assertTrue(result)
+
+    def testUserCreationDuplicate(self):
+        result = self.crowd.add_user('newuser1',
+                                     email='me@test.example',
+                                     password='hello')
+        self.assertTrue(result)
+        result = self.crowd.add_user('newuser1',
+                                     email='me@test.example',
+                                     password='hello')
+        self.assertFalse(result)
+
+    def testUserCreationMissingPassword(self):
+        def f():
+            result = self.crowd.add_user('newuser2',
+                                         email='me@test.example')
+        self.assertRaisesRegexp(ValueError, "missing password", f)
+
+    def testUserCreationMissingEmail(self):
+        def f():
+            result = self.crowd.add_user('newuser',
+                                         password='something')
+        self.assertRaisesRegexp(ValueError, "missing email", f)
+
+    def testUserCreationInvalidParam(self):
+        def f():
+            result = self.crowd.add_user('newuser',
+                                         email='me@test.example',
+                                         password='hello',
+                                         invalid_param='bad argument')
+        self.assertRaisesRegexp(ValueError, "invalid argument .*", f)
 
 if __name__ == "__main__":
     unittest.main()

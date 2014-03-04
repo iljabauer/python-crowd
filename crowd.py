@@ -50,7 +50,7 @@ class CrowdServer(object):
         return "Crowd Server at %s" % self.crowd_url
 
     def __repr__(self):
-        return "<CrowdServer('%s', '%s', %s')>" % \
+        return "<CrowdServer('%s', '%s', '%s')>" % \
             (self.crowd_url, self.app_name, self.app_pass)
 
     def _get(self, *args, **kwargs):
@@ -243,6 +243,84 @@ class CrowdServer(object):
 
         # Otherwise return True
         return True
+
+    def add_user(self, username, **kwargs):
+        """Add a user to the directory
+
+        Args:
+            username: The account username
+            **kwargs: key-value pairs:
+                          password: mandatory
+                          email: mandatory
+                          first_name: optional
+                          last_name: optional
+                          display_name: optional
+                          active: optional (default True)
+
+        Returns:
+            True: Succeeded
+            False: If unsuccessful
+        """
+        # Check that mandatory elements have been provided
+        if 'password' not in kwargs:
+            raise ValueError("missing password")
+        if 'email' not in kwargs:
+            raise ValueError("missing email")
+
+        components = ['username', 'password', 'first_name',
+                      'last_name', 'display_name', 'active']
+        # Populate data with default and mandatory values.
+        # A KeyError means a mandatory value was not provided,
+        # so raise a ValueError indicating bad args.
+        try:
+            data = {
+                    "name": username,
+                    "first-name": username,
+                    "last-name": username,
+                    "display-name": username,
+                    "email": kwargs["email"],
+                    "password": { "value": kwargs["password"] },
+                    "active": True
+                   }
+        except KeyError:
+            return ValueError
+
+        # Remove special case 'password'
+        del(kwargs["password"])
+
+        # Put values from kwargs into data
+        for k, v in kwargs.items():
+            new_k = k.replace("_", "-")
+            if new_k not in data:
+                raise ValueError("invalid argument %s" % k)
+            data[new_k] = v
+
+        response = self._post(self.rest_url + "/user",
+                              data=json.dumps(data))
+
+        if response.status_code == 201:
+            return True
+
+        return False
+
+
+    def get_user(self, username):
+        """Retrieve information about a user
+
+        Returns:
+            dict: User information
+
+            None: If no user or failure occurred
+        """
+
+        response = self._get(self.rest_url + "/user",
+                             params={"username": username,
+                                     "expand": "attributes"})
+
+        if not response.ok:
+            return None
+
+        return response.json()
 
     def get_groups(self, username):
         """Retrieves a list of group names that have <username> as a direct member.
